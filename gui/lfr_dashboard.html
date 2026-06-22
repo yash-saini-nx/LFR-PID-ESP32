@@ -1,0 +1,359 @@
+
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600&family=Syne:wght@400;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0;}
+  :root{
+    --bg:#0d0f12;--surface:#161a20;--surface2:#1e242d;--surface3:#252d38;
+    --border:#2a3340;--accent:#00d4aa;--accent2:#0099ff;--warn:#ffb800;--danger:#ff4444;
+    --text:#e8edf2;--muted:#6b7a8d;--mono:'JetBrains Mono',monospace;--sans:'Syne',sans-serif;
+  }
+  body{background:var(--bg);color:var(--text);font-family:var(--mono);min-height:600px;padding:0;}
+  .dash{display:grid;grid-template-rows:auto 1fr auto;gap:0;height:100%;}
+  .topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;justify-content:space-between;}
+  .logo{font-family:var(--sans);font-size:15px;font-weight:700;letter-spacing:0.05em;color:var(--accent);}
+  .logo span{color:var(--muted);font-weight:400;}
+  .status-dot{width:8px;height:8px;border-radius:50%;background:var(--danger);display:inline-block;margin-right:6px;}
+  .status-dot.connected{background:var(--accent);}
+  .conn-label{font-size:11px;color:var(--muted);}
+  .ws-input{background:var(--surface2);border:1px solid var(--border);color:var(--text);font-family:var(--mono);font-size:11px;padding:4px 8px;border-radius:4px;width:180px;}
+  .btn{font-family:var(--mono);font-size:11px;padding:5px 12px;border-radius:4px;border:1px solid var(--border);background:var(--surface2);color:var(--text);cursor:pointer;transition:all .15s;}
+  .btn:hover{background:var(--surface3);border-color:var(--accent);}
+  .btn.accent{background:var(--accent);color:#000;border-color:var(--accent);font-weight:600;}
+  .btn.accent:hover{opacity:.85;}
+  .btn.danger{border-color:var(--danger);color:var(--danger);}
+  .btn.danger:hover{background:rgba(255,68,68,.1);}
+  .btn.warn{border-color:var(--warn);color:var(--warn);}
+  .btn.warn:hover{background:rgba(255,184,0,.1);}
+  .main{display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto auto 1fr;gap:12px;padding:12px;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:6px;padding:12px;}
+  .card-title{font-size:10px;color:var(--muted);text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;}
+  .ir-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;}
+  .ir-bar{display:flex;flex-direction:column;align-items:center;gap:4px;}
+  .ir-bar-track{width:28px;height:80px;background:var(--surface2);border-radius:3px;border:1px solid var(--border);display:flex;align-items:flex-end;overflow:hidden;}
+  .ir-bar-fill{width:100%;transition:height .12s ease;border-radius:2px 2px 0 0;}
+  .ir-label{font-size:9px;color:var(--muted);}
+  .ir-val{font-size:11px;font-weight:600;}
+  .tof-card{display:flex;gap:16px;align-items:center;}
+  .tof-gauge{position:relative;width:80px;height:80px;flex-shrink:0;}
+  .tof-gauge svg{width:80px;height:80px;}
+  .tof-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center;}
+  .tof-mm{font-size:16px;font-weight:600;}
+  .tof-unit{font-size:9px;color:var(--muted);}
+  .tof-info{flex:1;}
+  .tof-status{font-size:12px;margin-bottom:4px;}
+  .tof-bar-wrap{height:8px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-top:6px;}
+  .tof-bar-inner{height:100%;border-radius:4px;transition:width .15s ease;}
+  .ctrl-grid{display:flex;gap:8px;flex-wrap:wrap;}
+  .pid-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+  .pid-item{background:var(--surface2);border-radius:4px;padding:8px;border:1px solid var(--border);}
+  .pid-key{font-size:9px;color:var(--muted);}
+  .pid-val{font-size:16px;font-weight:600;margin-top:2px;}
+  .state-badge{display:inline-block;padding:3px 10px;border-radius:3px;font-size:11px;font-weight:600;letter-spacing:.05em;}
+  .log-card{grid-column:1/-1;}
+  .log-box{background:var(--surface2);border-radius:4px;border:1px solid var(--border);padding:8px;height:130px;overflow-y:auto;font-size:10.5px;line-height:1.6;}
+  .log-line{display:flex;gap:8px;}
+  .log-ts{color:var(--muted);flex-shrink:0;}
+  .log-err{color:var(--danger);}
+  .log-warn{color:var(--warn);}
+  .log-ok{color:var(--accent);}
+  .log-info{color:var(--text);}
+  .sensor-row{grid-column:1/-1;display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .bottombar{background:var(--surface);border-top:1px solid var(--border);padding:8px 16px;display:flex;align-items:center;gap:16px;}
+  .stat-item{font-size:10px;color:var(--muted);}
+  .stat-item span{color:var(--text);}
+  .on-line-yes{color:var(--accent);}
+  .on-line-no{color:var(--danger);}
+  .demo-note{font-size:9px;color:var(--muted);margin-left:auto;}
+</style>
+
+<div class="dash">
+  <div class="topbar">
+    <div class="logo">LFR<span> / debug console</span></div>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <input class="ws-input" id="wsUrl" placeholder="ws://192.168.x.x:81" value="ws://192.168.4.1:81" />
+      <button class="btn accent" onclick="toggleConnect()" id="connBtn">Connect</button>
+      <span class="status-dot" id="dot"></span><span class="conn-label" id="connLabel">Disconnected</span>
+    </div>
+  </div>
+
+  <div class="main">
+    <div class="sensor-row">
+      <div class="card">
+        <div class="card-title">IR sensor array — 5 channel</div>
+        <div class="ir-grid" id="irGrid"></div>
+      </div>
+      <div class="card">
+        <div class="card-title">ToF distance — VL53L1X</div>
+        <div class="tof-card">
+          <div class="tof-gauge">
+            <svg viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="32" fill="none" stroke="#1e242d" stroke-width="6"/>
+              <circle cx="40" cy="40" r="32" fill="none" stroke="#2a3340" stroke-width="6" stroke-dasharray="201" stroke-dashoffset="0" stroke-linecap="round" transform="rotate(-90 40 40)" id="tofArcBg"/>
+              <circle cx="40" cy="40" r="32" fill="none" stroke="#00d4aa" stroke-width="6" stroke-dasharray="201" stroke-dashoffset="201" stroke-linecap="round" transform="rotate(-90 40 40)" id="tofArc" style="transition:stroke-dashoffset .15s ease,stroke .15s;"/>
+            </svg>
+            <div class="tof-center">
+              <div class="tof-mm" id="tofMm">—</div>
+              <div class="tof-unit">mm</div>
+            </div>
+          </div>
+          <div class="tof-info">
+            <div class="tof-status" id="tofStatus">Sensor not ready</div>
+            <div style="font-size:11px;color:var(--muted);margin-top:2px;">Threshold: <span style="color:var(--warn);">160 mm</span></div>
+            <div style="font-size:11px;color:var(--muted);">Obstacle: <span id="obstTxt" style="font-weight:600;">—</span></div>
+            <div class="tof-bar-wrap" style="margin-top:10px;">
+              <div class="tof-bar-inner" id="tofBarInner" style="width:0%;background:var(--accent);"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Bot state</div>
+      <div style="margin-bottom:10px;"><span class="state-badge" id="stateBadge">WAIT_CALIBRATE</span></div>
+      <div style="font-size:10px;color:var(--muted);margin-bottom:8px;">Line detected: <span id="onLineTxt" class="on-line-no">NO</span></div>
+      <div style="font-size:10px;color:var(--muted);">PID error: <span id="pidErr" style="color:var(--text);">—</span></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">PID values</div>
+      <div class="pid-grid">
+        <div class="pid-item"><div class="pid-key">P (Kp=0.32)</div><div class="pid-val" id="pVal">—</div></div>
+        <div class="pid-item"><div class="pid-key">I (Ki=0.001)</div><div class="pid-val" id="iVal">—</div></div>
+        <div class="pid-item"><div class="pid-key">D (Kd=1.0)</div><div class="pid-val" id="dVal">—</div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Controls</div>
+      <div class="ctrl-grid">
+        <button class="btn warn" onclick="sendCmd('CALIBRATE')">Calibrate</button>
+        <button class="btn accent" onclick="sendCmd('START')">Start</button>
+        <button class="btn danger" onclick="sendCmd('STOP')">E-Stop</button>
+        <button class="btn" onclick="sendCmd('RESET')">Reset</button>
+      </div>
+      <div style="font-size:10px;color:var(--muted);margin-top:8px;">Commands sent over WebSocket to ESP32</div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Motor output</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;">
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Left motor</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;">
+              <div id="m1bar" style="height:100%;border-radius:3px;background:var(--accent2);width:0%;transition:width .1s;"></div>
+            </div>
+            <span style="font-size:11px;min-width:32px;" id="m1val">0</span>
+          </div>
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:4px;">Right motor</div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <div style="flex:1;height:6px;background:var(--surface2);border-radius:3px;overflow:hidden;">
+              <div id="m2bar" style="height:100%;border-radius:3px;background:var(--accent2);width:0%;transition:width .1s;"></div>
+            </div>
+            <span style="font-size:11px;min-width:32px;" id="m2val">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card log-card">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;">
+        <div class="card-title" style="margin:0;">Error & event log</div>
+        <button class="btn" style="font-size:10px;padding:3px 8px;" onclick="clearLog()">Clear</button>
+      </div>
+      <div class="log-box" id="logBox"></div>
+    </div>
+  </div>
+
+  <div class="bottombar">
+    <div class="stat-item">Base speed: <span>90</span></div>
+    <div class="stat-item">Max speed: <span>150</span></div>
+    <div class="stat-item">Threshold: <span>160mm</span></div>
+    <div class="stat-item">Update: <span id="hz">— Hz</span></div>
+    <div class="demo-note">Connect ESP32 WebSocket or use demo mode below &nbsp;
+      <button class="btn" style="font-size:9px;padding:2px 8px;" onclick="toggleDemo()" id="demoBtn">Start demo</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STATES = ['WAIT_CALIBRATE','WAIT_START','FOLLOW_LINE','AVOID_LEFT_TURN','AVOID_LEFT_FORWARD','AVOID_RIGHT_TURN','AVOID_REJOIN_LINE','RETRACE_REJOIN_BACK','RETRACE_LEFT_TURN','RETRACE_SIDE_BACK','RETRACE_RIGHT_TURN','ERROR_STOP'];
+const STATE_COLORS = {
+  WAIT_CALIBRATE:'#6b7a8d',WAIT_START:'#ffb800',FOLLOW_LINE:'#00d4aa',
+  AVOID_LEFT_TURN:'#0099ff',AVOID_LEFT_FORWARD:'#0099ff',AVOID_RIGHT_TURN:'#0099ff',
+  AVOID_REJOIN_LINE:'#0099ff',RETRACE_REJOIN_BACK:'#ff9900',RETRACE_LEFT_TURN:'#ff9900',
+  RETRACE_SIDE_BACK:'#ff9900',RETRACE_RIGHT_TURN:'#ff9900',ERROR_STOP:'#ff4444'
+};
+
+let ws = null, demo = false, demoTimer = null, lastTs = Date.now(), hzArr = [], demoState = 2, demoT = 0;
+
+function buildIR(){
+  const g = document.getElementById('irGrid');
+  g.innerHTML = '';
+  const labels = ['S0','S1','S2','S3','S4'];
+  for(let i=0;i<5;i++){
+    g.innerHTML += `<div class="ir-bar">
+      <div style="font-size:9px;color:var(--muted);margin-bottom:2px;">${labels[i]}</div>
+      <div class="ir-bar-track"><div class="ir-bar-fill" id="irf${i}" style="height:0%;"></div></div>
+      <div class="ir-val" id="irv${i}">0</div>
+      <div class="ir-label">/ 1000</div>
+    </div>`;
+  }
+}
+
+function updateIR(vals){
+  const colors = ['#ff4444','#ffb800','#00d4aa','#ffb800','#ff4444'];
+  for(let i=0;i<5;i++){
+    const v = vals[i]||0;
+    const el = document.getElementById('irf'+i);
+    const vl = document.getElementById('irv'+i);
+    if(el){el.style.height=v/10+'%';el.style.background=v>600?colors[i]:'#2a3340';}
+    if(vl){vl.textContent=v;}
+  }
+}
+
+function updateTOF(mm){
+  document.getElementById('tofMm').textContent = mm===9999?'—':mm;
+  const arc = document.getElementById('tofArc');
+  const pct = Math.min(mm/500,1);
+  const circ = 201;
+  arc.style.strokeDashoffset = circ - pct*circ;
+  const obst = mm>0&&mm<160;
+  arc.style.stroke = obst?'#ff4444':mm<250?'#ffb800':'#00d4aa';
+  document.getElementById('tofStatus').textContent = mm===9999?'No reading':`Distance: ${mm} mm`;
+  document.getElementById('tofStatus').style.color = obst?'#ff4444':'var(--accent)';
+  document.getElementById('obstTxt').textContent = obst?'YES':'NO';
+  document.getElementById('obstTxt').style.color = obst?'#ff4444':'#00d4aa';
+  document.getElementById('tofBarInner').style.width = Math.min(mm/500*100,100)+'%';
+  document.getElementById('tofBarInner').style.background = obst?'#ff4444':mm<250?'#ffb800':'#00d4aa';
+}
+
+function updateState(s){
+  const b = document.getElementById('stateBadge');
+  b.textContent = s;
+  const c = STATE_COLORS[s]||'#6b7a8d';
+  b.style.background = c+'22';
+  b.style.color = c;
+  b.style.border = '1px solid '+c+'55';
+}
+
+function updateMotors(m1,m2){
+  document.getElementById('m1val').textContent = m1;
+  document.getElementById('m2val').textContent = m2;
+  document.getElementById('m1bar').style.width = Math.abs(m1)/255*100+'%';
+  document.getElementById('m2bar').style.width = Math.abs(m2)/255*100+'%';
+  document.getElementById('m1bar').style.background = m1<0?'#ff4444':'#0099ff';
+  document.getElementById('m2bar').style.background = m2<0?'#ff4444':'#0099ff';
+}
+
+function addLog(msg, type='info'){
+  const box = document.getElementById('logBox');
+  const ts = new Date().toLocaleTimeString('en',{hour12:false,hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const div = document.createElement('div');
+  div.className = 'log-line';
+  div.innerHTML = `<span class="log-ts">${ts}</span><span class="log-${type}">${msg}</span>`;
+  box.appendChild(div);
+  box.scrollTop = box.scrollHeight;
+  if(box.children.length > 200) box.removeChild(box.firstChild);
+}
+
+function clearLog(){ document.getElementById('logBox').innerHTML=''; }
+
+function updateHz(){
+  const now = Date.now();
+  hzArr.push(now - lastTs);
+  lastTs = now;
+  if(hzArr.length>20) hzArr.shift();
+  const avg = hzArr.reduce((a,b)=>a+b,0)/hzArr.length;
+  document.getElementById('hz').textContent = (1000/avg).toFixed(1)+' Hz';
+}
+
+function parseMsg(raw){
+  try{
+    const d = JSON.parse(raw);
+    if(d.s!==undefined) updateIR(d.s);
+    if(d.t!==undefined) updateTOF(d.t);
+    if(d.st!==undefined) updateState(STATES[d.st]||d.st);
+    if(d.ol!==undefined){
+      const el = document.getElementById('onLineTxt');
+      el.textContent = d.ol?'YES':'NO';
+      el.className = d.ol?'on-line-yes':'on-line-no';
+    }
+    if(d.p!==undefined) document.getElementById('pVal').textContent = (+d.p).toFixed(1);
+    if(d.i!==undefined) document.getElementById('iVal').textContent = (+d.i).toFixed(2);
+    if(d.dd!==undefined) document.getElementById('dVal').textContent = (+d.dd).toFixed(1);
+    if(d.err!==undefined) document.getElementById('pidErr').textContent = d.err;
+    if(d.m1!==undefined && d.m2!==undefined) updateMotors(d.m1, d.m2);
+    if(d.log) addLog(d.log, d.lt||'info');
+    updateHz();
+  }catch(e){}
+}
+
+let connected = false;
+function toggleConnect(){
+  if(connected){ ws&&ws.close(); return; }
+  const url = document.getElementById('wsUrl').value.trim();
+  try{
+    ws = new WebSocket(url);
+    ws.onopen = ()=>{ connected=true; document.getElementById('dot').className='status-dot connected'; document.getElementById('connLabel').textContent='Connected'; document.getElementById('connBtn').textContent='Disconnect'; addLog('WebSocket connected to '+url,'ok'); };
+    ws.onmessage = e=>parseMsg(e.data);
+    ws.onerror = ()=>addLog('WebSocket error — check IP/port','err');
+    ws.onclose = ()=>{ connected=false; document.getElementById('dot').className='status-dot'; document.getElementById('connLabel').textContent='Disconnected'; document.getElementById('connBtn').textContent='Connect'; addLog('WebSocket disconnected','warn'); };
+  }catch(e){ addLog('Invalid WebSocket URL','err'); }
+}
+
+function sendCmd(cmd){
+  if(ws&&ws.readyState===1){ ws.send(JSON.stringify({cmd})); addLog('Sent command: '+cmd,'ok'); }
+  else{ addLog('Not connected — command ['+cmd+'] not sent','warn'); }
+}
+
+// Demo mode
+let demoPhase=2, demoIR=[0,0,0,0,0], demoTof=350, demoP=0, demoI=0, demoDD=0, demoErr=0, demoObst=false;
+function demoTick(){
+  demoT++;
+  demoIR = [0,0,0,0,0];
+  if(demoPhase===2){
+    const pos = Math.round(2+1.5*Math.sin(demoT*0.05));
+    for(let i=0;i<5;i++) demoIR[i]=Math.max(0,Math.round(850-Math.abs(i-pos)*400+Math.random()*60));
+    demoErr = Math.round((pos-2)*15);
+    demoP=demoErr; demoI=Math.round(demoI*0.9+demoErr*0.001); demoDD=demoErr-demoP;
+    updateMotors(Math.round(90+demoErr*0.32),Math.round(90-demoErr*0.32));
+    updateIR(demoIR);
+    const ol = demoIR.some(v=>v>600);
+    document.getElementById('onLineTxt').textContent=ol?'YES':'NO';
+    document.getElementById('onLineTxt').className=ol?'on-line-yes':'on-line-no';
+    document.getElementById('pVal').textContent=demoP.toFixed(1);
+    document.getElementById('iVal').textContent=(demoI*0.001).toFixed(3);
+    document.getElementById('dVal').textContent=demoDD.toFixed(1);
+    document.getElementById('pidErr').textContent=demoErr;
+    demoTof = 250+Math.round(150*Math.abs(Math.sin(demoT*0.02)));
+    updateTOF(demoTof);
+    if(demoTof<160&&!demoObst){ addLog('Obstacle detected at '+demoTof+'mm — entering avoidance','warn'); demoObst=true; demoPhase=3; updateState('AVOID_LEFT_TURN'); setTimeout(()=>{demoPhase=2;demoObst=false;updateState('FOLLOW_LINE');addLog('Obstacle cleared — resumed line following','ok');},3000); }
+    if(demoT%120===0){ const r=Math.random(); if(r<0.08){ addLog('Center sensor lost line — recovery triggered','warn'); } }
+  } else if(demoPhase===3){
+    updateIR([0,0,0,0,0]); updateMotors(80,80);
+  }
+  updateHz();
+}
+
+function toggleDemo(){
+  demo=!demo;
+  document.getElementById('demoBtn').textContent=demo?'Stop demo':'Start demo';
+  if(demo){
+    updateState('FOLLOW_LINE'); addLog('Demo mode started — simulating ESP32 data','ok');
+    demoTimer=setInterval(demoTick,50);
+  } else {
+    clearInterval(demoTimer); addLog('Demo mode stopped','info');
+    updateState('WAIT_CALIBRATE'); updateMotors(0,0); updateTOF(9999);
+    document.getElementById('hz').textContent='— Hz';
+  }
+}
+
+buildIR();
+addLog('LFR debug console ready — connect ESP32 WebSocket or use demo mode','info');
+updateState('WAIT_CALIBRATE');
+updateTOF(9999);
+</script>
