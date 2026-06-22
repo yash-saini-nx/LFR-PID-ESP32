@@ -15,7 +15,7 @@
 
 <br/>
 
-![Track Preview](media/track_2_0.jpeg)
+![Track Preview](media/track_2.0.jpeg)
 
 </div>
 
@@ -139,6 +139,8 @@ The development followed a two-stage pipeline: circuit design and validation in 
 ### Circuit Schematic
 
 The circuit was designed in **Proteus 8 Professional**. Key connections:
+<br>
+<br/>
 ![Schematics](sch/circuit_nano.png)
 
 ```
