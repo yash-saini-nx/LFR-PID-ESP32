@@ -279,20 +279,20 @@ WAIT_CALIBRATE
 WAIT_START
       │  (START command received)
       ▼
-FOLLOW_LINE ◀──────────────────────────────────────┐
-      │                                             │
-      │  (ToF < 160 mm)                             │
-      ▼                                             │
-AVOID_LEFT_TURN                                     │
-      │                                             │
-      ▼                                             │
-AVOID_LEFT_FORWARD                                  │
-      │                                             │
-      ▼                                             │
-AVOID_RIGHT_TURN                                    │
-      │                                             │
-      ▼                                             │
-AVOID_REJOIN_LINE ──────────────────────────────────┘
+FOLLOW_LINE ◀─────────────────────────────┐
+      │                                    │
+      │  (ToF < 160 mm)                    │
+      ▼                                    │
+AVOID_LEFT_TURN                            │
+      │                                    │
+      ▼                                    │
+AVOID_LEFT_FORWARD                         │
+      │                                    │
+      ▼                                    │
+AVOID_RIGHT_TURN                           │
+      │                                    │
+      ▼                                    │
+AVOID_REJOIN_LINE ─────────────────────────┘
       │  (line not found)
       ▼
 RETRACE_REJOIN_BACK
