@@ -339,7 +339,7 @@ cd LFR-PID-ESP32
 
 1. Open Proteus 8 Professional
 2. `File → Open Project` → select `LFR_PID_CIRCUIT_DONE_pdsprj_*.workspace`
-3. Click **Run Simulation** (▶)
+3. Click **Run Simulation**
 4. Observe IR sensor analog outputs and motor PWM signals on virtual oscilloscope
 
 ### Using the Dashboard
@@ -407,14 +407,3 @@ The robot was tested on a complex multi-section track (shown above) featuring: s
 ## License
 
 This project is open-source under the [MIT License](LICENSE).
-
----
-
-<div align="center">
-
-**Built by Yash Saini**  
-*Embedded Systems · Robotics · PID Control*
-
-[![GitHub](https://img.shields.io/badge/GitHub-yash--saini--nx-181717?style=flat-square&logo=github)](https://github.com/yash-saini-nx)
-
-</div>
