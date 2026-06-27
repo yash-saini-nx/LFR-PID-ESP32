@@ -1,6 +1,6 @@
 <div align="center">
 
-# LFR-PID-ESP32
+# PID-Line Following Robot
 
 ### Line Follower Robot with PID Control, Obstacle Avoidance & Real-Time Web Dashboard
 
