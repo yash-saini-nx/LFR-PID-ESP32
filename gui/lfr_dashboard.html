@@ -64,6 +64,20 @@
   .on-line-yes{color:var(--accent);}
   .on-line-no{color:var(--danger);}
   .demo-note{font-size:9px;color:var(--muted);margin-left:auto;}
+
+  /* ---- MPU6050 card ---- */
+  .mpu-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px;}
+  .mpu-item{background:var(--surface2);border:1px solid var(--border);border-radius:4px;padding:7px 8px;}
+  .mpu-label{font-size:9px;color:var(--muted);margin-bottom:2px;}
+  .mpu-val{font-size:17px;font-weight:600;line-height:1.1;}
+  .mpu-bar-wrap{height:5px;background:var(--surface2);border-radius:3px;overflow:hidden;margin-top:5px;position:relative;}
+  .mpu-bar-pos{height:100%;position:absolute;border-radius:3px;}
+  .mpu-bar-neg{height:100%;position:absolute;border-radius:3px;}
+  .mpu-badge{display:inline-block;padding:2px 8px;border-radius:3px;font-size:10px;font-weight:600;margin-right:6px;}
+  .mpu-row{grid-column:1/-1;}
+  .mpu-status-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px;}
+  .gf-bar-wrap{height:7px;background:var(--surface2);border-radius:4px;overflow:hidden;margin-top:4px;}
+  .gf-bar-inner{height:100%;border-radius:4px;transition:width .12s ease,background .12s;}
 </style>
 
 <div class="dash">
@@ -154,6 +168,47 @@
               <div id="m2bar" style="height:100%;border-radius:3px;background:var(--accent2);width:0%;transition:width .1s;"></div>
             </div>
             <span style="font-size:11px;min-width:32px;" id="m2val">0</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MPU6050 IMU card — added section, nothing else changed -->
+    <div class="card" style="grid-column:1/-1;">
+      <div class="card-title">MPU6050 GY-521 — orientation &amp; feedback &nbsp;<span id="mpuStatusBadge" class="mpu-badge" style="background:#2a3340;color:#6b7a8d;">not ready</span><span style="font-size:10px;color:var(--muted);">Dynamic Kd boost: <span id="kdBoostVal" style="color:var(--text);">0.00</span></span></div>
+      <div class="mpu-status-row">
+        <span id="tiltBadge" style="display:none;" class="mpu-badge" style="background:rgba(255,68,68,.15);color:#ff4444;border:1px solid #ff4444;">TILT STOP</span>
+        <span id="impBadge"  style="display:none;" class="mpu-badge" style="background:rgba(255,184,0,.15);color:#ffb800;border:1px solid #ffb800;">IMPACT</span>
+      </div>
+      <div class="mpu-grid">
+        <div class="mpu-item">
+          <div class="mpu-label">Pitch °</div>
+          <div class="mpu-val" id="mpuPit" style="color:var(--accent);">0.0</div>
+          <div class="mpu-bar-wrap">
+            <div class="mpu-bar-pos" id="mpuPitBarP" style="background:var(--accent);width:0%;left:50%;"></div>
+            <div class="mpu-bar-neg" id="mpuPitBarN" style="background:var(--danger);width:0%;right:50%;"></div>
+          </div>
+        </div>
+        <div class="mpu-item">
+          <div class="mpu-label">Roll °</div>
+          <div class="mpu-val" id="mpuRol" style="color:#0099ff;">0.0</div>
+          <div class="mpu-bar-wrap">
+            <div class="mpu-bar-pos" id="mpuRolBarP" style="background:#0099ff;width:0%;left:50%;"></div>
+            <div class="mpu-bar-neg" id="mpuRolBarN" style="background:var(--danger);width:0%;right:50%;"></div>
+          </div>
+        </div>
+        <div class="mpu-item">
+          <div class="mpu-label">Yaw °</div>
+          <div class="mpu-val" id="mpuYaw" style="color:var(--warn);">0.0</div>
+          <div class="mpu-bar-wrap">
+            <div class="mpu-bar-pos" id="mpuYawBarP" style="background:var(--warn);width:0%;left:50%;"></div>
+            <div class="mpu-bar-neg" id="mpuYawBarN" style="background:var(--warn);width:0%;right:50%;"></div>
+          </div>
+        </div>
+        <div class="mpu-item mpu-row" style="grid-column:1/-1;">
+          <div class="mpu-label">G-force &nbsp;<span id="mpuGfVal" style="font-size:14px;font-weight:600;color:var(--text);">1.00</span> G</div>
+          <div class="gf-bar-wrap">
+            <div class="gf-bar-inner" id="mpuGfBar" style="width:25%;background:var(--accent);"></div>
           </div>
         </div>
       </div>
@@ -288,6 +343,22 @@ function parseMsg(raw){
     if(d.err!==undefined) document.getElementById('pidErr').textContent = d.err;
     if(d.m1!==undefined && d.m2!==undefined) updateMotors(d.m1, d.m2);
     if(d.log) addLog(d.log, d.lt||'info');
+    // MPU fields
+    if(d.mpu!==undefined) updateMPUStatus(d.mpu);
+    if(d.pit!==undefined) updateMPUOrientation(d.pit, d.rol, d.yaw);
+    if(d.gf!==undefined)  updateMPUGForce(d.gf);
+    if(d.tilt!==undefined){
+      const tb=document.getElementById('tiltBadge');
+      tb.style.display=d.tilt?'inline-block':'none';
+    }
+    if(d.imp!==undefined){
+      const ib=document.getElementById('impBadge');
+      ib.style.display=d.imp?'inline-block':'none';
+    }
+    if(d.kdb!==undefined){
+      document.getElementById('kdBoostVal').textContent=(d.kdb/100).toFixed(2);
+      document.getElementById('kdBoostVal').style.color=d.kdb>10?'#ffb800':'var(--text)';
+    }
     updateHz();
   }catch(e){}
 }
@@ -350,6 +421,45 @@ function toggleDemo(){
     updateState('WAIT_CALIBRATE'); updateMotors(0,0); updateTOF(9999);
     document.getElementById('hz').textContent='— Hz';
   }
+}
+
+// ---- MPU6050 display functions ----
+function updateMPUStatus(ready){
+  const b=document.getElementById('mpuStatusBadge');
+  if(ready){ b.style.background='rgba(0,212,170,.15)'; b.style.color='var(--accent)'; b.textContent='active'; }
+  else      { b.style.background='rgba(255,68,68,.15)';  b.style.color='var(--danger)'; b.textContent='not found'; }
+}
+
+function setAngleBar(posId,negId,deg,maxDeg){
+  const pct=Math.min(Math.abs(deg)/maxDeg,1)*50;
+  const pb=document.getElementById(posId), nb=document.getElementById(negId);
+  if(deg>=0){ pb.style.width=pct+'%'; pb.style.left='50%'; nb.style.width='0%'; }
+  else       { nb.style.width=pct+'%'; nb.style.right='50%'; pb.style.width='0%'; }
+}
+
+function updateMPUOrientation(pit,rol,yaw){
+  // values are x10 integers from ESP32
+  const p=pit/10, r=rol/10, y=yaw/10;
+  document.getElementById('mpuPit').textContent=p.toFixed(1);
+  document.getElementById('mpuRol').textContent=r.toFixed(1);
+  document.getElementById('mpuYaw').textContent=y.toFixed(1);
+  // colour pitch/roll red when approaching tilt-stop threshold (50°)
+  const pitColor=Math.abs(p)>35?'#ff4444':Math.abs(p)>20?'#ffb800':'var(--accent)';
+  const rolColor=Math.abs(r)>35?'#ff4444':Math.abs(r)>20?'#ffb800':'#0099ff';
+  document.getElementById('mpuPit').style.color=pitColor;
+  document.getElementById('mpuRol').style.color=rolColor;
+  setAngleBar('mpuPitBarP','mpuPitBarN',p,90);
+  setAngleBar('mpuRolBarP','mpuRolBarN',r,90);
+  setAngleBar('mpuYawBarP','mpuYawBarN',y,180);
+}
+
+function updateMPUGForce(gf){
+  const g=gf/100;
+  document.getElementById('mpuGfVal').textContent=g.toFixed(2);
+  const pct=Math.min(g/4,1)*100;
+  const bar=document.getElementById('mpuGfBar');
+  bar.style.width=pct+'%';
+  bar.style.background=g>3?'#ff4444':g>2?'#ffb800':g>1.5?'#ff9900':'var(--accent)';
 }
 
 buildIR();
